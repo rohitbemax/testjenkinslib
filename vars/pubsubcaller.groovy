@@ -1,4 +1,4 @@
-def call(String projectid) {
+def call() {
     //sh "echo libarycalled"
     //sh "echo GCloudproject- ${GCLOUD_PROJECT}"
     sh """
