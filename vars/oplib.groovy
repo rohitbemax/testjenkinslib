@@ -1,15 +1,15 @@
-def call(String chartVersion, String dockerImageTag, int timeout) {
+def call(String gkeSAKeyFile, String gcloudProject, String topicId, String chartVersion, String dockerImageTag, int timeout) {
     sh """
         export VERSION=\$(./gradlew properties -q |  grep 'version:' | awk '{print \$2}')
         CORRELATION_ID=\$(dbus-uuidgen)
         numOfIterations=0
 
-        gcloud auth activate-service-account --key-file ${GKE_SA_KEYFILE}
-        gcloud config set project "${GCLOUD_PROJECT}"
+        gcloud auth activate-service-account --key-file $gkeSAKeyFile
+        gcloud config set project "$gcloudProject"
 
         gcloud pubsub subscriptions delete one-platform-dev-solution-worker-jenkins || true
         gcloud pubsub subscriptions create one-platform-dev-solution-worker-jenkins --topic projects/lucidworks-dev/topics/one-platform-dev --message-filter=\"attributes.correlation_id=\\"\$CORRELATION_ID\\" AND attributes.event_type != \\"CONTINUOUS_DEPLOYMENT_REQUEST\\"\"  || exit 1
-        gcloud pubsub topics publish ${TOPIC_ID} --attribute event_type=CONTINUOUS_DEPLOYMENT_REQUEST,correlation_id=\$CORRELATION_ID --message="{\"component_name\": \"one-platform-solution-worker\",\"helm_chart_name\": \"one-platform-solution-worker\",\"helm_chart_version\": \"$chartVersion\", \"docker_image_tag\": \"\$VERSION-$dockerImageTag\" }"
+        gcloud pubsub topics publish $topicId --attribute event_type=CONTINUOUS_DEPLOYMENT_REQUEST,correlation_id=\$CORRELATION_ID --message="{\"component_name\": \"one-platform-solution-worker\",\"helm_chart_name\": \"one-platform-solution-worker\",\"helm_chart_version\": \"$chartVersion\", \"docker_image_tag\": \"\$VERSION-$dockerImageTag\" }"
 
         counter=1
         numOfIterations=`expr $timeout / 10`
